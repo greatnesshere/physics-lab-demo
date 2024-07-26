@@ -42,12 +42,11 @@ with subprocess.Popen([args.node_path, os.path.join( os.path.dirname(__file__), 
         from websockets.sync.client import connect
         from json import loads
         with connect(f'ws://localhost:{8032}') as websocket_client:
-            while not stop.wait(timeout=1.):
+            while not stop.is_set():
                 try:
-                    data = loads(websocket_client.recv(timeout=1.))
-                    if 'type' in data and data['type'] == 'command':
-                        if 'value' in data:
-                            new_velocity.put_nowait(data['value'])
+                    data=loads(websocket_client.recv(timeout=0))
+                    if data['type']=='push':
+                        new_velocity.put_nowait(data['value'])
                 except TimeoutError:
                     pass
     ui_thread=threading.Thread(target=ui_communication_agent)
@@ -79,14 +78,13 @@ with subprocess.Popen([args.node_path, os.path.join( os.path.dirname(__file__), 
             if event.type == pygame.QUIT:
                 running = False
 
-        data.put_nowait(
-            {
-                'pos': point.pos[0],
-                'time': time,
-                'accel': 0,
-                'vel': (point.pos-point.ppos)[0],
-            },
-        )
+        data.put_nowait({
+            'type': 'data',
+            'pos': point.pos[0],
+            'time': time,
+            'accel': 0,
+            'vel': (point.pos-point.ppos)[0],
+        })
         try:
             point.ppos = point.pos - np.array([new_velocity.get_nowait(),0.])
         except queue.Empty:

@@ -31,17 +31,17 @@
                 reload</span
             >
         </div>
-        <div class="w-[800px] h-[600px]" id="calculator"></div>
+        <div class="w-[1280px] h-[720px]" id="calculator"></div>
         <div id="graph-options">
             <label for="xAxisValues">X-axis values:</label>
-            <select id="xAxisValues">
+            <select id="xAxisValues" name="xAxisValues">
                 <option value="pos">Position</option>
                 <option value="time" selected>Time</option>
                 <option value="accel">Acceleration</option>
                 <option value="vel">Velocity</option>
             </select>
             <label for="yAxisValues">Y-axis values:</label>
-            <select id="yAxisValues">
+            <select id="yAxisValues" name="yAxisValues">
                 <option value="pos" selected>Position</option>
                 <option value="time">Time</option>
                 <option value="accel">Acceleration</option>
@@ -50,7 +50,7 @@
         </div>
         <div id="sim-options">
             <label for="velocity">Velocity:</label>
-            <input id="velocity" type="number" />
+            <input id="velocity" name="velocity" type="number" />
         </div>
         <script>
             const el = document.getElementById('calculator');
@@ -114,16 +114,21 @@
             websocket.addEventListener('message', function (msg) {
                 const data = JSON.parse(msg.data);
                 for (const [key, value] of Object.entries(data)) {
+                    if (key == 'type') {
+                        continue;
+                    }
                     values[key].push(value);
                 }
             });
             const updateVelocity = (event) => {
-                websocket.send(JSON.stringify({
-                    type: 'command',
-                    value: event.target.value,
-                }))
-            }
-            velocityOptions.addEventListener('change',updateVelocity);
+                websocket.send(
+                    JSON.stringify({
+                        type: 'push',
+                        value: Number.parseFloat(event.target.value),
+                    })
+                );
+            };
+            velocityOptions.addEventListener('change', updateVelocity);
         </script>
     </body>
 </html>

@@ -766,12 +766,12 @@ select {
   height: 1.5rem;
 }
 
-.h-\[600px\] {
-  height: 600px;
+.h-\[720px\] {
+  height: 720px;
 }
 
-.w-\[800px\] {
-  width: 800px;
+.w-\[1280px\] {
+  width: 1280px;
 }
 
 .bg-red-500 {
