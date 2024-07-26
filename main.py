@@ -24,7 +24,6 @@ with subprocess.Popen([args.node_path, os.path.join( os.path.dirname(__file__), 
         from json import dumps
         from time import time as current_time
         with connect(f'ws://localhost:{8032}') as websocket_client:
-            # TODO
             while not stop.wait(timeout=1.):
                 stop_at=current_time()+1.
                 while current_time()<stop_at:
