@@ -26,7 +26,9 @@ with subprocess.Popen([args.node_path, os.path.join( os.path.dirname(__file__), 
         with connect(f'ws://localhost:{8032}') as websocket_client:
             # TODO
             while not stop.wait(timeout=1.):
-                websocket_client.send(dumps(data.get()))
+                stop_at=current_time()+1.
+                while current_time()<stop_at:
+                    websocket_client.send(dumps(data.get()))
             # send leftover data
             try:
                 # this is inefficient and blocks
@@ -34,6 +36,7 @@ with subprocess.Popen([args.node_path, os.path.join( os.path.dirname(__file__), 
                     websocket_client.send(dumps(data.get_nowait()))
             except queue.Empty:
                 pass
+        print('streaming thread exited')
     streaming_thread=threading.Thread(target=websocket_connect_as_client)
     streaming_thread.start()
 
@@ -49,6 +52,7 @@ with subprocess.Popen([args.node_path, os.path.join( os.path.dirname(__file__), 
                         new_velocity.put_nowait(data['value'])
                 except TimeoutError:
                     pass
+        print('ui thread exited')
     ui_thread=threading.Thread(target=ui_communication_agent)
     ui_thread.start()
 
