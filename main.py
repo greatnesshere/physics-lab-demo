@@ -22,19 +22,23 @@ with subprocess.Popen([args.node_path, os.path.join( os.path.dirname(__file__), 
     def websocket_connect_as_client():
         from websockets.sync.client import connect
         from json import dumps
-        from time import time as current_time
+        # from time import time as current_time
         with connect(f'ws://localhost:{8032}') as websocket_client:
             while not stop.wait(timeout=1.):
-                stop_at=current_time()+1.
-                while current_time()<stop_at:
-                    websocket_client.send(dumps(data.get()))
+                try:
+                    while True:
+                        websocket_client.send(dumps(data.get_nowait()))
+                except queue.Empty:
+                    pass
+                # and then we wait another second
+            # if the above works normally there should be no leftover data
             # send leftover data
-            try:
-                # this is inefficient and blocks
-                while True:
-                    websocket_client.send(dumps(data.get_nowait()))
-            except queue.Empty:
-                pass
+            # try:
+            #     # this is inefficient and blocks
+            #     while True:
+            #         websocket_client.send(dumps(data.get_nowait()))
+            # except queue.Empty:
+            #     pass
         print('streaming thread exited')
     streaming_thread=threading.Thread(target=websocket_connect_as_client)
     streaming_thread.start()
