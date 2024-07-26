@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Control Panel</title>
+        <link rel="stylesheet" href="style/tailwind.css" />
+        <script src="https://www.desmos.com/api/v1.9/calculator.js?apiKey=dcb31709b452b1cf9dc26972add0fda6"></script>
+    </head>
+    <body class="group">
+        <div class="bg-red-500 hidden group-[.error]:block" id="error">
+            <span class="text-white"
+                >Could not connect, ensure WebSocket server is running and
+                reload</span
+            >
+        </div>
+        <div class="w-[800px] h-[600px]" id="calculator"></div>
+        <div id="graph-options"></div>
+        <div id="sim-options">
+            <label for="velocity">Velocity:</label>
+            <input id="velocity" type="number" />
+        </div>
+        <script>
+            const el = document.getElementById('calculator');
+            const calc = Desmos.GraphingCalculator(el);
+            const updateValues = (xAxisLabel,xAxisValues,yAxisLabel,yAxisValues,xAxisLatex,yAxisLatex) => {
+                calc.updateSettings({ xAxisLabel, yAxisLabel });
+                // Should only need to be called once due to JS references
+                calc.setExpression({
+                    id: 'physiolab-output',
+                    type: 'table',
+                    columns: [
+                        { latex: xAxisLatex, values: xAxisValues },
+                        { latex: yAxisLatex, values: yAxisValues },
+                    ]
+                });
+            }
+            const values = {
+                pos: [],
+                time: [],
+                accel: [],
+                vel: []
+            }
+            const websocket = new WebSocket(`ws://localhost:${8032}`);
+            websocket.addEventListener('error', console.error);
+            websocket.addEventListener('message', console.log);
+        </script>
+    </body>
+</html>

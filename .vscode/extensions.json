@@ -1,0 +1,9 @@
+{
+    "recommendations": [
+        "ms-python.pylint",
+        "EditorConfig.EditorConfig",
+        "dbaeumer.vscode-eslint",
+        "bradlc.vscode-tailwindcss",
+        "ms-vscode.live-server",
+    ]
+}

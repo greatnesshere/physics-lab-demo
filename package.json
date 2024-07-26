@@ -1,0 +1,9 @@
+{
+  "type": "module",
+  "dependencies": {
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.7"
+  }
+}
