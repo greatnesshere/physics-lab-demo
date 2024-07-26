@@ -8,14 +8,46 @@
         <script src="https://www.desmos.com/api/v1.9/calculator.js?apiKey=dcb31709b452b1cf9dc26972add0fda6"></script>
     </head>
     <body class="group">
-        <div class="bg-red-500 hidden group-[.error]:block" id="error">
-            <span class="text-white"
-                >Could not connect, ensure WebSocket server is running and
+        <div
+            class="bg-red-500 text-white hidden group-[.error]:block"
+            id="error"
+        >
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="currentColor"
+                class="size-6 inline"
+            >
+                <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+                />
+            </svg>
+            <span>
+                Could not connect, ensure WebSocket server is running and
                 reload</span
             >
         </div>
         <div class="w-[800px] h-[600px]" id="calculator"></div>
-        <div id="graph-options"></div>
+        <div id="graph-options">
+            <label for="xAxisValues">X-axis values:</label>
+            <select id="xAxisValues">
+                <option value="pos">Position</option>
+                <option value="time" selected>Time</option>
+                <option value="accel">Acceleration</option>
+                <option value="vel">Velocity</option>
+            </select>
+            <label for="yAxisValues">Y-axis values:</label>
+            <select id="yAxisValues">
+                <option value="pos" selected>Position</option>
+                <option value="time">Time</option>
+                <option value="accel">Acceleration</option>
+                <option value="vel">Velocity</option>
+            </select>
+        </div>
         <div id="sim-options">
             <label for="velocity">Velocity:</label>
             <input id="velocity" type="number" />
@@ -23,27 +55,75 @@
         <script>
             const el = document.getElementById('calculator');
             const calc = Desmos.GraphingCalculator(el);
-            const updateValues = (xAxisLabel,xAxisValues,yAxisLabel,yAxisValues,xAxisLatex,yAxisLatex) => {
+            const xAxisOptions = document.getElementById('xAxisValues');
+            const yAxisOptions = document.getElementById('yAxisValues');
+            const velocityOptions = document.getElementById('velocity');
+            const updateValues = (
+                xAxisLabel,
+                xAxisValues,
+                yAxisLabel,
+                yAxisValues,
+                xAxisLatex,
+                yAxisLatex
+            ) => {
                 calc.updateSettings({ xAxisLabel, yAxisLabel });
-                // Should only need to be called once due to JS references
+                // Should only need to be called once due to JS references (update: i was wrong)
                 calc.setExpression({
                     id: 'physiolab-output',
                     type: 'table',
                     columns: [
                         { latex: xAxisLatex, values: xAxisValues },
                         { latex: yAxisLatex, values: yAxisValues },
-                    ]
+                    ],
                 });
-            }
+            };
+            const latex = {
+                pos: 'x',
+                time: 't',
+                accel: 'a',
+                vel: 'v',
+            };
+            const label = {
+                pos: 'Position',
+                time: 'Time',
+                accel: 'Acceleration',
+                vel: 'Velocity',
+            };
             const values = {
                 pos: [],
                 time: [],
                 accel: [],
-                vel: []
-            }
+                vel: [],
+            };
+            const updateValuesHelper = (xAxisOptions, yAxisOptions) => {
+                updateValues(
+                    label[xAxisOptions.value],
+                    values[xAxisOptions.value],
+                    label[yAxisOptions.value],
+                    values[yAxisOptions.value],
+                    latex[xAxisOptions.value],
+                    latex[yAxisOptions.value]
+                );
+            };
+            setInterval(updateValuesHelper, 1000, xAxisOptions, yAxisOptions);
             const websocket = new WebSocket(`ws://localhost:${8032}`);
-            websocket.addEventListener('error', console.error);
-            websocket.addEventListener('message', console.log);
+            websocket.addEventListener('error', function (error) {
+                console.error(error);
+                document.body.classList.add('error');
+            });
+            websocket.addEventListener('message', function (msg) {
+                const data = JSON.parse(msg.data);
+                for (const [key, value] of Object.entries(data)) {
+                    values[key].push(value);
+                }
+            });
+            const updateVelocity = (event) => {
+                websocket.send(JSON.stringify({
+                    type: 'command',
+                    value: event.target.value,
+                }))
+            }
+            velocityOptions.addEventListener('change',updateVelocity);
         </script>
     </body>
 </html>
